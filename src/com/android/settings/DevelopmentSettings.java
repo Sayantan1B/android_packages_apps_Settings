@@ -142,6 +142,8 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
     private static final String OPENGL_TRACES_PROPERTY = "debug.egl.trace";
     private static final String TUNER_UI_KEY = "tuner_ui";
     private static final String COLOR_TEMPERATURE_PROPERTY = "persist.sys.debug.color_temp";
+    private static final String DNSCRYPT_PROXY_PROPERTY = "persist.privacy.dnscrypt";
+    private static final String DNSCRYPT_TOR_PROPERTY = "persist.privacy.tor";
 
     private static final String DEBUG_APP_KEY = "debug_app";
     private static final String WAIT_FOR_DEBUGGER_KEY = "wait_for_debugger";
@@ -202,6 +204,8 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
     private static final String KEY_COLOR_MODE = "color_mode";
     private static final String FORCE_RESIZABLE_KEY = "force_resizable_activities";
     private static final String COLOR_TEMPERATURE_KEY = "color_temperature";
+    private static final String DNSCRYPT_PROXY_KEY = "dnscrypt_proxy";
+    private static final String DNSCRYPT_TOR_KEY = "dnscrypt_tor";
 
     private static final String BLUETOOTH_DISABLE_ABSOLUTE_VOLUME_KEY =
                                     "bluetooth_disable_absolute_volume";
@@ -331,6 +335,10 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
     private SwitchPreference mForceResizable;
 
     private SwitchPreference mColorTemperaturePreference;
+
+    private SwitchPreference mDnscryptProxyPreference;
+
+    private SwitchPreference mDnscryptTorPreference;
 
     private SwitchPreference mUpdateRecoveryPreference;
 
@@ -552,6 +560,24 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
         } else {
             removePreference(COLOR_TEMPERATURE_KEY);
             mColorTemperaturePreference = null;
+        }
+
+        mDnscryptProxyPreference = (SwitchPreference) findPreference(DNSCRYPT_PROXY_KEY);
+        if (getResources().getBoolean(R.bool.config_enableDnscryptProxy)) {
+            mAllPrefs.add(mDnscryptProxyPreference);
+            mResetSwitchPrefs.add(mDnscryptProxyPreference);
+        } else {
+            removePreference(DNSCRYPT_PROXY_KEY);
+            mDnscryptProxyPreference = null;
+        }
+
+        mDnscryptTorPreference = (SwitchPreference) findPreference(DNSCRYPT_TOR_KEY);
+        if (getResources().getBoolean(R.bool.config_enableDnscryptTor)) {
+            mAllPrefs.add(mDnscryptTorPreference);
+            mResetSwitchPrefs.add(mDnscryptTorPreference);
+        } else {
+            removePreference(DNSCRYPT_TOR_KEY);
+            mDnscryptTorPreference = null;
         }
 
         mRootAccess = (ListPreference) findPreference(ROOT_ACCESS_KEY);
@@ -809,6 +835,12 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
         updateOemUnlockOptions();
         if (mColorTemperaturePreference != null) {
             updateColorTemperature();
+        }
+        if (mDnscryptProxyPreference != null) {
+            updateDnscryptProxy();
+        }
+        if (mDnscryptTorPreference != null) {
+            updateDnscryptTor();
         }
         updateBluetoothDisableAbsVolumeOptions();
         updateRootAccessOptions();
@@ -1537,6 +1569,30 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
         Toast.makeText(getActivity(), R.string.color_temperature_toast, Toast.LENGTH_LONG).show();
     }
 
+    private void updateDnscryptProxy() {
+        updateSwitchPreference(mDnscryptProxyPreference,
+                SystemProperties.getBoolean(DNSCRYPT_PROXY_PROPERTY, false));
+    }
+
+    private void writeDnscryptProxy() {
+        SystemProperties.set(DNSCRYPT_PROXY_PROPERTY,
+                mDnscryptProxyPreference.isChecked() ? "1" : "0");
+        pokeSystemProperties();
+        Toast.makeText(getActivity(), R.string.dnscrypt_proxy_toast, Toast.LENGTH_LONG).show();
+    }
+
+    private void updateDnscryptTor() {
+        updateSwitchPreference(mDnscryptTorPreference,
+                SystemProperties.getBoolean(DNSCRYPT_TOR_PROPERTY, false));
+    }
+
+    private void writeDnscryptTor() {
+        SystemProperties.set(DNSCRYPT_TOR_PROPERTY,
+                mDnscryptTorPreference.isChecked() ? "1" : "0");
+        pokeSystemProperties();
+        Toast.makeText(getActivity(), R.string.dnscrypt_tor_toast, Toast.LENGTH_LONG).show();
+    }
+
     private void updateUSBAudioOptions() {
         updateSwitchPreference(mUSBAudio, Settings.Secure.getInt(getContentResolver(),
                 Settings.Secure.USB_AUDIO_AUTOMATIC_ROUTING_DISABLED, 0) != 0);
@@ -2252,6 +2308,10 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
             writeMobileDataAlwaysOnOptions();
         } else if (preference == mColorTemperaturePreference) {
             writeColorTemperature();
+        } else if (preference == mDnscryptProxyPreference) {
+            writeDnscryptProxy();
+        } else if (preference == mDnscryptTorPreference) {
+            writeDnscryptTor();
         } else if (preference == mUSBAudio) {
             writeUSBAudioOptions();
         } else if (preference == mForceResizable) {
